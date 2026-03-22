@@ -1,0 +1,1189 @@
+{
+  "datasets": [
+    {
+      "name": "2c6cf146",
+      "displayName": "price_evolution",
+      "queryLines": [
+        "WITH ranked_cities AS (\n",
+        "  SELECT\n",
+        "    town_city,\n",
+        "    SUM(total_transactions) AS total_transactions\n",
+        "  FROM\n",
+        "    workspace.uk_housing.gold_temporal_trends\n",
+        "  GROUP BY\n",
+        "    town_city\n",
+        "  ORDER BY\n",
+        "    total_transactions DESC\n",
+        "  LIMIT :top_cities\n",
+        ")\n",
+        "SELECT\n",
+        "  CAST(CONCAT(year, '-', LPAD(month, 2, '0'), '-01') AS DATE) AS date_of_transfer,\n",
+        "  gtt.town_city,\n",
+        "  gtt.total_transactions,\n",
+        "  ROUND(gtt.avg_price, 0) AS avg_price,\n",
+        "  ROUND(gtt.std_price, 0) AS price_volatility,\n",
+        "  ROUND(gtt.total_value, 0) AS total_market_value\n",
+        "FROM\n",
+        "  workspace.uk_housing.gold_temporal_trends gtt\n",
+        "    INNER JOIN ranked_cities rc\n",
+        "      ON gtt.town_city = rc.town_city\n",
+        "ORDER BY\n",
+        "  date_of_transfer;"
+      ],
+      "parameters": [
+        {
+          "displayName": "Top ciudades por transacciones",
+          "keyword": "top_cities",
+          "dataType": "INTEGER",
+          "defaultSelection": {
+            "values": {
+              "dataType": "INTEGER",
+              "values": [
+                {
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "columns": [
+        {
+          "displayName": "Precio medio ponderado",
+          "description": "Media de precios ponderada por el número de transacciones, representando el precio medio real en las ciudades seleccionadas.",
+          "expression": "SUM(`avg_price` * `total_transactions`) / SUM(`total_transactions`)"
+        }
+      ],
+      "catalog": "workspace",
+      "schema": "uk_housing"
+    },
+    {
+      "name": "3166b7c4",
+      "displayName": "property_type",
+      "queryLines": [
+        "SELECT \r\n",
+        "    property_type_desc,\r\n",
+        "    total_transactions,\r\n",
+        "    ROUND(total_price, 0) AS total_market_value,\r\n",
+        "    ROUND(avg_price, 0) AS avg_price\r\n",
+        "FROM workspace.uk_housing.gold_property_analysis\r\n",
+        "WHERE town_city = 'LONDON'\r\n",
+        "ORDER BY total_transactions DESC;"
+      ]
+    },
+    {
+      "name": "5bc62c65",
+      "displayName": "price_category",
+      "queryLines": [
+        "SELECT \r\n",
+        "    price_category,\r\n",
+        "    total_transactions,\r\n",
+        "    ROUND(avg_price, 0) AS avg_price,\r\n",
+        "    ROUND(min_price, 0) AS min_price,\r\n",
+        "    ROUND(max_price, 0) AS max_price,\r\n",
+        "    ROUND((total_transactions * 100.0 / SUM(total_transactions) OVER()), 2) AS percentage_market\r\n",
+        "FROM workspace.uk_housing.gold_price_category_analysis\r\n",
+        "WHERE town_city = 'LONDON'\r\n",
+        "ORDER BY avg_price DESC;"
+      ]
+    },
+    {
+      "name": "f1539454",
+      "displayName": "district_by_transactions",
+      "queryLines": [
+        "WITH ranked_districts AS (\r\n",
+        "  SELECT\r\n",
+        "    district,\r\n",
+        "    SUM(total_transactions) AS total_transactions,\r\n",
+        "    AVG(avg_price) AS avg_price\r\n",
+        "  FROM\r\n",
+        "    workspace.uk_housing.gold_district_analysis\r\n",
+        "  WHERE town_city = 'LONDON'\r\n",
+        "  GROUP BY\r\n",
+        "    DISTRICT\r\n",
+        "  ORDER BY\r\n",
+        "    total_transactions DESC\r\n",
+        "  LIMIT :top_districts\r\n",
+        ")\r\n",
+        "SELECT\r\n",
+        "  CAST(CONCAT(year, '-', LPAD(month, 2, '0'), '-01') AS DATE) AS date_of_transfer,\r\n",
+        "  gda.district,\r\n",
+        "  gda.total_transactions,\r\n",
+        "  ROUND(gda.avg_price, 0) AS avg_price,\r\n",
+        "  ROUND(gda.min_price, 0) AS min_price,\r\n",
+        "  ROUND(gda.max_price, 0) AS max_price\r\n",
+        "FROM\r\n",
+        "  workspace.uk_housing.gold_district_analysis gda\r\n",
+        "    INNER JOIN ranked_districts rd\r\n",
+        "      ON gda.district = rd.district\r\n",
+        "WHERE gda.town_city = 'LONDON'\r\n",
+        "ORDER BY\r\n",
+        "  date_of_transfer;"
+      ],
+      "parameters": [
+        {
+          "displayName": "top_districts",
+          "keyword": "top_districts",
+          "dataType": "INTEGER",
+          "defaultSelection": {
+            "values": {
+              "dataType": "INTEGER",
+              "values": [
+                {
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "columns": [
+        {
+          "displayName": "Precio medio ponderado",
+          "description": "Media de precios ponderada por el número de transacciones, representando el precio medio real en las ciudades seleccionadas.",
+          "expression": "SUM(`avg_price` * `total_transactions`) / SUM(`total_transactions`)"
+        }
+      ]
+    },
+    {
+      "name": "445ff7d5",
+      "displayName": "district_by_price",
+      "queryLines": [
+        "WITH ranked_districts AS (\r\n",
+        "  SELECT\r\n",
+        "    district,\r\n",
+        "    AVG(avg_price) AS avg_price,\r\n",
+        "    SUM(total_transactions) AS total_transactions\r\n",
+        "  FROM\r\n",
+        "    workspace.uk_housing.gold_district_analysis\r\n",
+        "  WHERE town_city = 'LONDON' AND total_transactions > 10\r\n",
+        "  GROUP BY\r\n",
+        "    DISTRICT\r\n",
+        "  ORDER BY\r\n",
+        "    avg_price DESC\r\n",
+        "  LIMIT :top_districts\r\n",
+        ")\r\n",
+        "SELECT\r\n",
+        "  CAST(CONCAT(year, '-', LPAD(month, 2, '0'), '-01') AS DATE) AS date_of_transfer,\r\n",
+        "  gda.district,\r\n",
+        "  gda.total_transactions,\r\n",
+        "  ROUND(gda.avg_price, 0) AS avg_price,\r\n",
+        "  ROUND(gda.min_price, 0) AS min_price,\r\n",
+        "  ROUND(gda.max_price, 0) AS max_price\r\n",
+        "FROM\r\n",
+        "  workspace.uk_housing.gold_district_analysis gda\r\n",
+        "    INNER JOIN ranked_districts rd\r\n",
+        "      ON gda.district = rd.district\r\n",
+        "WHERE gda.town_city = 'LONDON'\r\n",
+        "ORDER BY\r\n",
+        "  date_of_transfer;"
+      ],
+      "parameters": [
+        {
+          "displayName": "top_districts",
+          "keyword": "top_districts",
+          "dataType": "INTEGER",
+          "defaultSelection": {
+            "values": {
+              "dataType": "INTEGER",
+              "values": [
+                {
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "columns": [
+        {
+          "displayName": "Precio medio ponderado",
+          "description": "Media de precios ponderada por el número de transacciones, representando el precio medio real en las ciudades seleccionadas.",
+          "expression": "SUM(`avg_price` * `total_transactions`) / SUM(`total_transactions`)"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "d40faf68",
+      "displayName": "Análisis de las ciudades principales",
+      "layout": [
+        {
+          "widget": {
+            "name": "la-ciudad-con",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "2c6cf146",
+                  "fields": [
+                    {
+                      "name": "sum(total_transactions)",
+                      "expression": "SUM(`total_transactions`)"
+                    },
+                    {
+                      "name": "avg(avg_price)",
+                      "expression": "AVG(`avg_price`)"
+                    },
+                    {
+                      "name": "town_city",
+                      "expression": "`town_city`"
+                    }
+                  ],
+                  "parameterValues": [
+                    {
+                      "keyword": "top_cities",
+                      "selection": {}
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "showDescription": false,
+                "title": "Ciudades con mayor número de transacciones",
+                "headerAlignment": "center"
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(total_transactions)",
+                  "axis": {
+                    "title": "Transacciones totales",
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "town_city",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  }
+                },
+                "color": {
+                  "fieldName": "sum(total_transactions)",
+                  "legend": {
+                    "hide": true
+                  },
+                  "scale": {
+                    "type": "quantitative",
+                    "colorRamp": {
+                      "mode": "scheme",
+                      "scheme": "blues"
+                    }
+                  }
+                },
+                "label": {
+                  "show": false
+                },
+                "extra": [
+                  {
+                    "fieldName": "avg(avg_price)"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 12,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "total-transacciones-largo-tiempo",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "2c6cf146",
+                  "fields": [
+                    {
+                      "name": "monthly(date_of_transfer)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `date_of_transfer`)"
+                    },
+                    {
+                      "name": "sum(total_transactions)",
+                      "expression": "SUM(`total_transactions`)"
+                    }
+                  ],
+                  "parameterValues": [
+                    {
+                      "keyword": "top_cities",
+                      "selection": {
+                        "values": {
+                          "dataType": "INTEGER",
+                          "values": [
+                            {
+                              "value": "10"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "headerAlignment": "center",
+                "title": "Transacciones a lo largo del tiempo"
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 1
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ],
+                "size": 0
+              },
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(date_of_transfer)",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(total_transactions)",
+                  "axis": {
+                    "title": "Transacciones totales",
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "precio-medio-a-lo-largo-del-tiempo",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "2c6cf146",
+                  "fields": [
+                    {
+                      "name": "monthly(date_of_transfer)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `date_of_transfer`)"
+                    },
+                    {
+                      "name": "measure(Precio medio ponderado)",
+                      "expression": "MEASURE(`Precio medio ponderado`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "headerAlignment": "center",
+                "title": "Precio medio a lo largo del tiempo"
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ],
+                "size": 0
+              },
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(date_of_transfer)",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Precio medio ponderado)",
+                  "axis": {
+                    "title": "Average Price",
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 1,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "99ac1ee1",
+            "multilineTextboxSpec": {
+              "lines": [
+                "<span style=\"text-align:center;display:block\"><span style=\"font-size: 24px;\">**Análisis de las ciudades con más transacciones inmobiliarias de Reino Unido**</span></span>"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 1
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "fb4e355b",
+      "displayName": "Global Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "top_cities_filter",
+            "queries": [
+              {
+                "name": "parameter_dashboards/01f123db91b41969907bbbf78360e3ad/datasets/01f123dcac0c1b4d870f25e909b9f41b_top_cities",
+                "query": {
+                  "datasetName": "2c6cf146",
+                  "parameters": [
+                    {
+                      "name": "top_cities",
+                      "keyword": "top_cities"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Número de ciudades a mostrar",
+                "showTitle": true
+              },
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "parameterName": "top_cities",
+                    "queryName": "parameter_dashboards/01f123db91b41969907bbbf78360e3ad/datasets/01f123dcac0c1b4d870f25e909b9f41b_top_cities"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "91386781",
+      "displayName": "Análisis de Londres",
+      "layout": [
+        {
+          "widget": {
+            "name": "precio-medio-tipo-propiedad-vendida",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "3166b7c4",
+                  "fields": [
+                    {
+                      "name": "avg_price",
+                      "expression": "`avg_price`"
+                    },
+                    {
+                      "name": "total_transactions",
+                      "expression": "`total_transactions`"
+                    },
+                    {
+                      "name": "property_type_desc",
+                      "expression": "`property_type_desc`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Precio medio por tipo de propiedad vendida",
+                "headerAlignment": "center"
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "avg_price",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "property_type_desc",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  }
+                },
+                "color": {
+                  "fieldName": "avg_price",
+                  "legend": {
+                    "hide": true
+                  },
+                  "scale": {
+                    "type": "quantitative",
+                    "colorRamp": {
+                      "mode": "scheme",
+                      "scheme": "blues"
+                    }
+                  }
+                },
+                "label": {
+                  "show": false
+                },
+                "extra": [
+                  {
+                    "fieldName": "total_transactions"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 12,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "total-propiedades-vendidas-categoria-precio",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "5bc62c65",
+                  "fields": [
+                    {
+                      "name": "total_transactions",
+                      "expression": "`total_transactions`"
+                    },
+                    {
+                      "name": "price_category",
+                      "expression": "`price_category`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Propiedades vendidas por categoría de precio",
+                "headerAlignment": "center"
+              },
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "total_transactions",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "hideTitle": true
+                  }
+                },
+                "color": {
+                  "fieldName": "price_category",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "High",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 4
+                        }
+                      },
+                      {
+                        "value": "Low",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 3
+                        }
+                      },
+                      {
+                        "value": "Premium",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 2
+                        }
+                      },
+                      {
+                        "value": "Medium",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 1
+                        }
+                      }
+                    ]
+                  }
+                },
+                "label": {
+                  "show": false
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 12,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "1a207687",
+            "multilineTextboxSpec": {
+              "lines": [
+                "<span style=\"text-align:center;display:block;\"><span style=\"font-size: 24px;\">**Ciudad con mayor número de transacciones: LONDRES**</span></span>"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 1
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "43eff7c4",
+      "displayName": "Análisis por distrito",
+      "layout": [
+        {
+          "widget": {
+            "name": "distritos-mas-transacciones",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "f1539454",
+                  "fields": [
+                    {
+                      "name": "sum(total_transactions)",
+                      "expression": "SUM(`total_transactions`)"
+                    },
+                    {
+                      "name": "district",
+                      "expression": "`district`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Distritos con más transacciones",
+                "headerAlignment": "center"
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(total_transactions)",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "district",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  }
+                },
+                "color": {
+                  "fieldName": "sum(total_transactions)",
+                  "legend": {
+                    "hide": true
+                  },
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "87eda1f6",
+            "multilineTextboxSpec": {
+              "lines": [
+                "<span style=\"text-align:center;display:block\"><span style=\"font-size: 24px;\">**Análisis de los principales distritos de Londres**</span></span>"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "transacciones-a-lo-largo-del-tiempo",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "f1539454",
+                  "fields": [
+                    {
+                      "name": "monthly(date_of_transfer)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `date_of_transfer`)"
+                    },
+                    {
+                      "name": "sum(total_transactions)",
+                      "expression": "SUM(`total_transactions`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Transacciones a lo largo del tiempo",
+                "headerAlignment": "center"
+              },
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(date_of_transfer)",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(total_transactions)",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "distritos-mas-caros",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "445ff7d5",
+                  "fields": [
+                    {
+                      "name": "sum(avg_price)",
+                      "expression": "SUM(`avg_price`)"
+                    },
+                    {
+                      "name": "avg(avg_price)",
+                      "expression": "AVG(`avg_price`)"
+                    },
+                    {
+                      "name": "district",
+                      "expression": "`district`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Distritos más caros",
+                "headerAlignment": "center"
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "avg(avg_price)",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "district",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  }
+                },
+                "color": {
+                  "fieldName": "sum(avg_price)",
+                  "legend": {
+                    "hide": true
+                  },
+                  "scale": {
+                    "type": "quantitative",
+                    "colorRamp": {
+                      "mode": "scheme",
+                      "scheme": "orangered"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 1,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "precio-medio-tiempo",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "445ff7d5",
+                  "fields": [
+                    {
+                      "name": "monthly(date_of_transfer)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `date_of_transfer`)"
+                    },
+                    {
+                      "name": "measure(Precio medio ponderado)",
+                      "expression": "MEASURE(`Precio medio ponderado`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Precio medio a lo largo del tiempo",
+                "headerAlignment": "center"
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              },
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(date_of_transfer)",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Precio medio ponderado)",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 6,
+            "width": 6,
+            "height": 5
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}
