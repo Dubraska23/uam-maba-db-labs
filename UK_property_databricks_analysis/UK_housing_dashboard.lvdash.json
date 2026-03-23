@@ -202,6 +202,17 @@
           "expression": "SUM(`avg_price` * `total_transactions`) / SUM(`total_transactions`)"
         }
       ]
+    },
+    {
+      "name": "e77263e9",
+      "displayName": "london_6_month_pred",
+      "queryLines": [
+        "SELECT date_of_transfer, \r\n",
+        "ROUND(predicted_avg_price,1) AS predicted_avg_price, \r\n",
+        "ROUND(predicted_avg_price_lower) AS predicted_avg_price_lower, \r\n",
+        "ROUND(predicted_avg_price_upper) AS predicted_avg_price_upper\r\n",
+        "FROM workspace.uk_housing.london_prices_6_month_pred"
+      ]
     }
   ],
   "pages": [
@@ -223,8 +234,8 @@
                       "expression": "SUM(`total_transactions`)"
                     },
                     {
-                      "name": "avg(avg_price)",
-                      "expression": "AVG(`avg_price`)"
+                      "name": "measure(Precio medio ponderado)",
+                      "expression": "MEASURE(`Precio medio ponderado`)"
                     },
                     {
                       "name": "town_city",
@@ -335,7 +346,7 @@
                 },
                 "extra": [
                   {
-                    "fieldName": "avg(avg_price)"
+                    "fieldName": "measure(Precio medio ponderado)"
                   }
                 ]
               }
@@ -578,7 +589,7 @@
             "name": "99ac1ee1",
             "multilineTextboxSpec": {
               "lines": [
-                "<span style=\"text-align:center;display:block\"><span style=\"font-size: 24px;\">**Análisis de las ciudades con más transacciones inmobiliarias de Reino Unido**</span></span>"
+                "<span style=\"text-align:center;display:block\"><span style=\"font-size:24px\">**Análisis de transacciones inmobiliarias de Reino Unido**</span></span>"
               ]
             }
           },
@@ -661,10 +672,6 @@
                       "expression": "`avg_price`"
                     },
                     {
-                      "name": "total_transactions",
-                      "expression": "`total_transactions`"
-                    },
-                    {
                       "name": "property_type_desc",
                       "expression": "`property_type_desc`"
                     }
@@ -712,25 +719,20 @@
                     "type": "quantitative",
                     "colorRamp": {
                       "mode": "scheme",
-                      "scheme": "blues"
+                      "scheme": "orangered"
                     }
                   }
                 },
                 "label": {
                   "show": false
-                },
-                "extra": [
-                  {
-                    "fieldName": "total_transactions"
-                  }
-                ]
+                }
               }
             }
           },
           "position": {
-            "x": 0,
+            "x": 6,
             "y": 1,
-            "width": 12,
+            "width": 6,
             "height": 5
           }
         },
@@ -837,6 +839,89 @@
             "y": 0,
             "width": 12,
             "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "d0629980",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "3166b7c4",
+                  "fields": [
+                    {
+                      "name": "total_transactions",
+                      "expression": "`total_transactions`"
+                    },
+                    {
+                      "name": "property_type_desc",
+                      "expression": "`property_type_desc`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Precio medio por tipo de propiedad vendida",
+                "headerAlignment": "center"
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "total_transactions",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "property_type_desc",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  }
+                },
+                "color": {
+                  "fieldName": "total_transactions",
+                  "legend": {
+                    "hide": true
+                  },
+                  "scale": {
+                    "type": "quantitative",
+                    "colorRamp": {
+                      "mode": "scheme",
+                      "scheme": "blues"
+                    }
+                  }
+                },
+                "label": {
+                  "show": false
+                },
+                "extra": [
+                  {
+                    "fieldName": "total_transactions"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 6,
+            "height": 5
           }
         }
       ],
@@ -1003,10 +1088,6 @@
                   "datasetName": "445ff7d5",
                   "fields": [
                     {
-                      "name": "sum(avg_price)",
-                      "expression": "SUM(`avg_price`)"
-                    },
-                    {
                       "name": "avg(avg_price)",
                       "expression": "AVG(`avg_price`)"
                     },
@@ -1050,7 +1131,7 @@
                   }
                 },
                 "color": {
-                  "fieldName": "sum(avg_price)",
+                  "fieldName": "avg(avg_price)",
                   "legend": {
                     "hide": true
                   },
@@ -1173,6 +1254,128 @@
             "y": 6,
             "width": 6,
             "height": 5
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "0b78da76",
+      "displayName": "Predicción 6 meses",
+      "layout": [
+        {
+          "widget": {
+            "name": "eb1a5770",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "e77263e9",
+                  "fields": [
+                    {
+                      "name": "monthly(date_of_transfer)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `date_of_transfer`)"
+                    },
+                    {
+                      "name": "predicted_avg_price",
+                      "expression": "`predicted_avg_price`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              },
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(date_of_transfer)",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "predicted_avg_price",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "309c3dfc",
+            "multilineTextboxSpec": {
+              "lines": [
+                "<span style=\"text-align:center;display:block;\"><span style=\"font-size: 24px;\">**Predicción para los próximos 6 meses (precio medio en Londres)**</span></span>"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 1
           }
         }
       ],

@@ -42,6 +42,6 @@ query = (df_renamed.writeStream
 # Esperar a que termine el procesamiento
 query.awaitTermination()
 
-print(f"✓ Auto Loader configurado correctamente")
-print(f"✓ Tabla creada: {target_table}")
-print(f"✓ Archivos cargados desde: {volume_path}")
+print(f"Auto Loader configurado correctamente")
+print(f"Tabla creada: {target_table}")
+print(f"Archivos cargados desde: {volume_path}")
