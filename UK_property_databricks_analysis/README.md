@@ -5,14 +5,15 @@ Proyectos de análisis de datos con Databricks para el MABA (Master in Business 
 ## 📚 Proyecto
 
 ### UK Property Price Analysis
-Análisis de transacciones inmobiliarias del Reino Unido con arquitectura Medallion (Bronze-Silver-Gold).
+Análisis de transacciones inmobiliarias del Reino Unido (2024-2025) con arquitectura Medallion (Bronze-Silver-Gold).
 
 **Estructura de Notebooks:**
 - `01_data_ingestion_exploration.ipynb`: Carga inicial y exploración de datos, EDA básico desde la tabla raw.
-- `02_data_cleaning_transformation.ipynb`: Procesamiento, limpieza y transformación de datos. Genera las capas Bronze y Silver.
+- `02_data_cleaning.ipynb`: Procesamiento, limpieza y transformación de datos. Genera las capas Bronze y Silver.
 - `03_transformations.ipynb`: Generación de todas las tablas Gold, incluyendo análisis por ciudad, tendencias temporales, tipo de propiedad, distritos y categorías de precio.
 - `04_sql_analysis.ipynb`: Análisis SQL y visualización sobre las tablas Gold, con consultas avanzadas y segmentación.
-- `05_dashboard_summary.ipynb`: Resúmenes visuales y dashboards, enfocados en ciudades, tipos de propiedad y distritos usando las tablas Gold.
+- `05_dashboard_summary.ipynb`: Resúmenes visuales y dashboards, enfocados en ciudades, tipos de propiedad y distritos usando las tablas Gold.    
+- `06_model_data.ipynb`: Creación del dataset para entrenar un modelo de machine learning para predecir el precio medio de la vivienda en Londres a 6 meses vista.
 
 **Dataset:** HM Land Registry Price Paid Data, 2024-2025 (+1,500,000 transacciones)
 

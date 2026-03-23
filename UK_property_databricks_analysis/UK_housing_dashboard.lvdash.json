@@ -867,7 +867,7 @@
               "version": 3,
               "frame": {
                 "showTitle": true,
-                "title": "Precio medio por tipo de propiedad vendida",
+                "title": "Numero de transacciones por tipo de propiedad vendida",
                 "headerAlignment": "center"
               },
               "widgetType": "bar",
