@@ -42,6 +42,7 @@ Ejecuta el notebook o script `auto_loader_config` para habilitar la ingesta incr
 3. Utiliza `03_transformations.ipynb` para crear las tablas Gold.
 4. Realiza análisis SQL con `04_sql_analysis.ipynb`.
 5. Presenta visualizaciones y dashboards con `05_dashboard_summary.ipynb`.
+6. Opcional: ejecuta `06_model_data.ipynb` para generar el dataset para emtrenar un modelo predictivo.
 
 ---
 
@@ -79,13 +80,14 @@ Yearly raw CSVs
 
 ## 🔧 Tecnologías
 
-- **Databricks ** - Plataforma de análisis y procesamiento
+- **Databricks** - Plataforma de análisis y procesamiento
 - **Apache Spark (PySpark)** - Motor de procesamiento distribuido
 - **Delta Lake** - Almacenamiento transaccional para data lakes
 - **SQL** - Consultas y análisis de datos
 - **Unity Catalog** - Gobierno y gestión de datos
 - **Auto Loader** - Ingesta incremental de archivos
-- **Visualización Databricks** - Herramientas de visualización en notebooks y dashboarda
+- **Visualización Databricks** - Herramientas de visualización en notebooks y dashboard
+- **MLFlow** - Gestión del ciclo de vida del machine learning: el seguimiento de experimentos, modelos, parámetros y resultados en Databricks
 
 
 ---
